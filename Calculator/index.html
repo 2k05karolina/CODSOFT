@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sky Blue Calculator</title>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #87ceeb, #e0f7fa);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .calculator {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 330px;
+            padding: 20px;
+            display: grid;
+            grid-template-rows: 100px auto;
+        }
+
+        .display {
+            background: #e3f2fd;
+            color: #1a1a1a;
+            font-size: 2.5rem;
+            border-radius: 12px;
+            padding: 10px 20px;
+            text-align: right;
+            overflow-x: auto;
+            user-select: none;
+            box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .buttons {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        button {
+            background: #e0f7fa;
+            border: none;
+            border-radius: 10px;
+            color: #0d47a1;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 20px 0;
+            box-shadow: 0 4px #b2ebf2;
+        }
+
+        button:active {
+            box-shadow: none;
+            transform: translateY(4px);
+        }
+
+        button.operator {
+            background: #4fc3f7;
+            color: white;
+        }
+
+        button.equal {
+            background: #00acc1;
+            color: white;
+            grid-column: span 2;
+        }
+
+        button.clear {
+            background: #ef5350;
+            color: white;
+        }
+
+        button#backspace {
+            background: #ffb74d;
+            color: white;
+        }
+
+        @media (max-width: 360px) {
+            .calculator {
+                width: 95vw;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="operator" id="clear">C</button>
+            <button class="operator" data-op="/">÷</button>
+            <button class="operator" data-op="*">×</button>
+            <button class="operator" data-op="-">−</button>
+
+            <!-- Numbers -->
+            <button data-num="7">7</button>
+            <button data-num="8">8</button>
+            <button data-num="9">9</button>
+            <button class="operator" data-op="+">+</button>
+
+            <button data-num="4">4</button>
+            <button data-num="5">5</button>
+            <button data-num="6">6</button>
+
+            <button data-num="1">1</button>
+            <button data-num="2">2</button>
+            <button data-num="3">3</button>
+
+            <!-- Bottom row -->
+            <button data-num="0" style="grid-column: span 1;">0</button>
+            <button data-num=".">.</button>
+            <button id="backspace">←</button>
+
+            <!-- Equal button -->
+            <button class="equal" id="equals" style="grid-column: span 3;">=</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const buttons = document.querySelectorAll('button');
+
+        let currentInput = '';
+        let lastInputIsOperator = false;
+
+        function updateDisplay(text) {
+            display.textContent = text;
+        }
+
+        function calculateExpression(expr) {
+            try {
+                if (/[\+\-\*\/]{2,}/.test(expr)) return "Error";
+                if (/[^0-9+\-*/.() ]/.test(expr)) return "Error";
+
+                let result = Function(`"use strict"; return (${expr})`)();
+                if (!isFinite(result)) return "Error";
+                return +result.toFixed(6);
+            } catch {
+                return "Error";
+            }
+        }
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const num = button.getAttribute('data-num');
+                const op = button.getAttribute('data-op');
+                const id = button.id;
+
+                if (id === 'clear') {
+                    currentInput = '';
+                    updateDisplay('0');
+                    lastInputIsOperator = false;
+                    return;
+                }
+
+                if (id === 'backspace') {
+                    if (currentInput.length > 0) {
+                        currentInput = currentInput.slice(0, -1);
+                        updateDisplay(currentInput || '0');
+                        lastInputIsOperator = /[\+\-\*\/]$/.test(currentInput);
+                    }
+                    return;
+                }
+
+                if (id === 'equals') {
+                    if (currentInput === '') return;
+                    let result = calculateExpression(currentInput);
+                    updateDisplay(result);
+                    currentInput = result === "Error" ? '' : result.toString();
+                    lastInputIsOperator = false;
+                    return;
+                }
+
+                if (num !== null) {
+                    if (num === '.' && /(\.\d*|\.)$/.test(currentInput)) return;
+                    currentInput += num;
+                    updateDisplay(currentInput);
+                    lastInputIsOperator = false;
+                    return;
+                }
+
+                if (op !== null) {
+                    if (currentInput === '' && op !== '-') return;
+                    if (lastInputIsOperator) {
+                        currentInput = currentInput.slice(0, -1) + op;
+                        updateDisplay(currentInput);
+                        return;
+                    }
+                    currentInput += op;
+                    updateDisplay(currentInput);
+                    lastInputIsOperator = true;
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>
